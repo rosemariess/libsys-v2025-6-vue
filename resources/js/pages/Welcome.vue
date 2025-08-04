@@ -105,7 +105,9 @@ const closeRegisterModal = () => {
     <section class="py-12 bg-gray-50 -mt-14">
         <div class="container mx-auto">
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-5 max-w-7xl mx-auto px-4 mt-5px">
-                <div class="collection-card group relative bg-gradient-to-br from-white to-gray-50 p-8 rounded-xl shadow-sm hover:shadow-lg border border-gray-100 overflow-hidden transition-all duration-300 hover:border-usepmaroon/20">
+                <div class="collection-card group relative bg-gradient-to-br from-white to-gray-50 p-8 rounded-xl shadow-sm hover:shadow-lg border border-gray-100 overflow-hidden transition-all duration-300 hover:border-usepmaroon/20"
+                    @click="openLoginModal">
+                    <!-- Browse Collection Card -->
                     <div class="absolute top-0 right-0 w-16 h-16 bg-usepmaroon/5 transform translate-x-8 -translate-y-8 rotate-45 transition-all duration-500 group-hover:bg-usepmaroon/10"></div>
                     <div class="relative z-10">
                         <div class="text-usepmaroon text-4xl mb-4 transition-all duration-300 group-hover:text-usepmaroon/90 group-hover:scale-110 inline-block">
@@ -121,7 +123,9 @@ const closeRegisterModal = () => {
                         </div>
                     </div>
                 </div>
-                <div class="collection-card group relative bg-gradient-to-br from-white to-gray-50 p-8 rounded-xl shadow-sm hover:shadow-lg border border-gray-100 overflow-hidden transition-all duration-300 hover:border-usepmaroon/20">
+                <div class="collection-card group relative bg-gradient-to-br from-white to-gray-50 p-8 rounded-xl shadow-sm hover:shadow-lg border border-gray-100 overflow-hidden transition-all duration-300 hover:border-usepmaroon/20"
+                    @click="openRegisterModal">
+                    <!-- New Arrivals Card -->
                     <div class="absolute inset-0 overflow-hidden">
                         <div class="absolute top-1/4 left-1/4 w-2 h-2 bg-yellow-400 rounded-full opacity-0 group-hover:opacity-70 group-hover:animate-ping duration-1000"></div>
                         <div class="absolute top-1/3 right-1/4 w-1.5 h-1.5 bg-yellow-400 rounded-full opacity-0 group-hover:opacity-60 group-hover:animate-ping duration-700 delay-200"></div>
@@ -140,7 +144,9 @@ const closeRegisterModal = () => {
                         </div>
                     </div>
                 </div>
-                <div class="collection-card group relative bg-gradient-to-br from-white to-gray-50 p-8 rounded-xl shadow-sm hover:shadow-lg border border-gray-100 overflow-hidden transition-all duration-300 hover:border-usepmaroon/20">
+                <div class="collection-card group relative bg-gradient-to-br from-white to-gray-50 p-8 rounded-xl shadow-sm hover:shadow-lg border border-gray-100 overflow-hidden transition-all duration-300 hover:border-usepmaroon/20"
+                    @click="openLoginModal">
+                    <!-- Top Picks Card -->
                     <div class="absolute -bottom-4 -right-4 w-16 h-16 bg-usepmaroon/5 rounded-full transform transition-all duration-500 group-hover:scale-150 group-hover:bg-usepmaroon/10"></div>
                     <div class="absolute -top-4 -left-4 w-12 h-12 bg-usepmaroon/5 rounded-full transform transition-all duration-500 group-hover:scale-150 group-hover:bg-usepmaroon/10"></div>
                     <div class="relative z-10">
