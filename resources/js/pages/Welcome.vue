@@ -68,10 +68,10 @@ const closeRegisterModal = () => {
     <!-- Navigation -->
     <nav class="bg-white shadow-md sticky top-0 z-50 w-full">
         <div class="container mx-auto px-4 py-3 flex flex-col md:flex-row justify-between items-center gap-4">
-            <button class="text-2xl font-bold text-usepmaroon hover:text-usepmaroon/80 transition flex items-center">
+            <Link href="/logger" class="text-2xl font-bold text-usepmaroon hover:text-usepmaroon/80 transition flex items-center">
                 <img src="/images/usep-logo-small.png" alt="USEP Logo" class="h-8 mr-2">
                 USeP Library
-            </button>
+            </Link>
             <div class="flex items-center space-x-4">
                 <button v-if="$page.props.config.login_enabled" @click="openLoginModal" class="px-4 py-2 border border-usepmaroon text-usepmaroon rounded-md hover:bg-usepmaroon/10 transition flex items-center shadow-sm hover:shadow">
                     <i class="fas fa-sign-in-alt mr-2"></i>

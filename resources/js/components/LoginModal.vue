@@ -23,6 +23,7 @@ const submit = () => {
         errorMessage.value = 'Invalid email or password.';
       } else {
         emit('close');
+        router.visit(route('dashboard'));
       }
     },
     onError: () => {
