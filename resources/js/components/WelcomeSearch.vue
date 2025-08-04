@@ -2,52 +2,87 @@
 import { Search } from "lucide-vue-next"
 import { Input } from "@/components/ui/input"
 import { router, useForm } from '@inertiajs/vue3';
-import { Button } from '@/components/ui/button';
+import { ref, watch, onMounted, onBeforeUnmount } from 'vue';
 
 const props = defineProps({
     search_result: Object,
     search_term: String,
-    search_button: Boolean,
 });
 
 const form = useForm({
     search: props.search_term,
+    filter: 'All',
 });
 
-const search = () => {
-    router.get(route('home'), { search: form.search, search_button: true }, { preserveState: true });
+const filterOptions = [
+    'All',
+    'Books',
+    'Electronic Collection',
+    'Periodical Magazine',
+    'Thesis and Dissertation',
+];
+
+const suggestions = ref([]);
+const dropdownRef = ref<HTMLElement | null>(null);
+
+// Watch for changes in the search input or filter and fetch suggestions dynamically
+watch([
+    () => form.search,
+    () => form.filter
+], ([searchVal, filterVal]) => {
+    if (searchVal && searchVal.length > 0) {
+        router.get(route('home'), { search: searchVal, filter: filterVal }, {
+            preserveState: true,
+            preserveScroll: true,
+            only: ['search_result'],
+            onSuccess: (page) => {
+                const data = page.props.search_result?.data || page.props.search_result || [];
+                suggestions.value = data;
+            }
+        });
+    } else {
+        suggestions.value = [];
+    }
+}, { immediate: true });
+
+const removeSuggestion = (id: number) => {
+    suggestions.value = suggestions.value.filter((item: any) => item.id !== id);
 };
 
-const clearSearch = () => {
-    form.search = ''; // Clear the search input
-    router.get(route('home'), { search: '' }, { preserveState: true }); // Update the route
+// Close dropdown when clicking outside
+const handleClickOutside = (event: MouseEvent) => {
+    if (dropdownRef.value && !dropdownRef.value.contains(event.target as Node)) {
+        suggestions.value = [];
+    }
 };
+
+onMounted(() => {
+    document.addEventListener('mousedown', handleClickOutside);
+});
+onBeforeUnmount(() => {
+    document.removeEventListener('mousedown', handleClickOutside);
+});
 </script>
 
 <template>
-    <div class="relative w-full max-w-sm items-center">
-        <form @submit.prevent="search">
-            <Input required v-model="form.search" id="search" type="search"
-                   placeholder="Search accession, title..." class="pl-10" />
-        </form>
-        <span class="absolute start-0 inset-y-0 flex items-center justify-center px-2">
-          <Search class="size-6 text-muted-foreground" />
-        </span>
-    </div>
-    <div class="flex gap-2">
-        <Button variant="outline" v-if="form.search" @click="clearSearch">Clear</Button>
-        <Button @click="search">Search</Button>
-    </div>
-
-    <div v-if="search_result?.data?.length" class="max-w-md">
-        <div v-for="result in search_result?.data" :key="result.id" class="grid gap-y-4">
-            {{ result.accession_number }}
-            {{ result.title }}
-            {{ result.book.authors }}
-            {{ result.book.publication_year }}
+    <div class="relative w-full max-w-2xl items-center" ref="dropdownRef">
+        <div class="flex relative w-full">
+            <select v-model="form.filter" class="rounded-l-md border border-gray-300 bg-white px-3 h-12 focus:outline-none focus:ring-2 focus:ring-usepmaroon min-w-[180px]">
+                <option v-for="option in filterOptions" :key="option" :value="option">{{ option }}</option>
+            </select>
+            <div class="flex-1 relative">
+                <Input v-model="form.search" id="search" type="search"
+                       placeholder="Search accession, title..." class="pl-10 rounded-l-none w-full min-w-[250px] md:min-w-[350px] lg:min-w-[400px] h-12" />
+                <span class="absolute left-2 top-1/2 -translate-y-1/2 flex items-center justify-center">
+                  <Search class="size-6 text-muted-foreground" />
+                </span>
+                <div v-if="suggestions.length" class="absolute left-0 right-0 z-10 mt-2 bg-white border rounded shadow max-h-60 overflow-auto">
+                    <div v-for="result in suggestions" :key="result.id" class="p-2 hover:bg-gray-100 cursor-pointer" @click="removeSuggestion(result.id)">
+                        <div class="font-semibold">{{ result.accession_number }} - {{ result.title }}</div>
+                        <div class="text-xs text-gray-500">{{ result.book?.authors }} | {{ result.book?.publication_year }}</div>
+                    </div>
+                </div>
+            </div>
         </div>
-    </div>
-    <div v-else-if="!search_result?.data?.length && search_button">
-        No records found
     </div>
 </template>
