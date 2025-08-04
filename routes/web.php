@@ -45,5 +45,9 @@ Route::get('/test', function () {
     return Inertia::render('Test');
 });
 
+Route::get('/logger', function () {
+    return Inertia::render('Logger');
+})->name('logger');
+
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';
