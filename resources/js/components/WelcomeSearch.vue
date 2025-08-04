@@ -3,6 +3,7 @@ import { Search } from "lucide-vue-next"
 import { Input } from "@/components/ui/input"
 import { router, useForm } from '@inertiajs/vue3';
 import { ref, watch, onMounted, onBeforeUnmount } from 'vue';
+import WelcomeBookDialog from '@/components/WelcomeBookDialog.vue';
 
 const props = defineProps({
     search_result: Object,
@@ -24,6 +25,9 @@ const filterOptions = [
 
 const suggestions = ref([]);
 const dropdownRef = ref<HTMLElement | null>(null);
+const selectedRecord = ref(null);
+const showDialog = ref(false);
+const searchFocused = ref(false);
 
 // Watch for changes in the search input or filter and fetch suggestions dynamically
 watch([
@@ -45,6 +49,13 @@ watch([
     }
 }, { immediate: true });
 
+// Open modal directly when dropdown changes and suggestions exist
+watch(() => form.filter, (newVal, oldVal) => {
+    if (suggestions.value.length > 0) {
+        selectedRecord.value = suggestions.value[0];
+        showDialog.value = true;
+    }
+});
 const removeSuggestion = (id: number) => {
     suggestions.value = suggestions.value.filter((item: any) => item.id !== id);
 };
@@ -54,6 +65,11 @@ const handleClickOutside = (event: MouseEvent) => {
     if (dropdownRef.value && !dropdownRef.value.contains(event.target as Node)) {
         suggestions.value = [];
     }
+};
+
+const openBookDialog = (record) => {
+    selectedRecord.value = record;
+    showDialog.value = true;
 };
 
 onMounted(() => {
@@ -72,17 +88,19 @@ onBeforeUnmount(() => {
             </select>
             <div class="flex-1 relative">
                 <Input v-model="form.search" id="search" type="search"
-                       placeholder="Search accession, title..." class="pl-10 rounded-l-none w-full min-w-[250px] md:min-w-[350px] lg:min-w-[400px] h-12" />
+                       placeholder="Search accession, title..." class="pl-10 rounded-l-none w-full min-w-[250px] md:min-w-[350px] lg:min-w-[400px] h-12"
+                       @focus="searchFocused = true" @blur="searchFocused = false" />
                 <span class="absolute left-2 top-1/2 -translate-y-1/2 flex items-center justify-center">
                   <Search class="size-6 text-muted-foreground" />
                 </span>
-                <div v-if="suggestions.length" class="absolute left-0 right-0 z-10 mt-2 bg-white border rounded shadow max-h-60 overflow-auto">
-                    <div v-for="result in suggestions" :key="result.id" class="p-2 hover:bg-gray-100 cursor-pointer" @click="removeSuggestion(result.id)">
+                <div v-if="searchFocused && suggestions.length" class="absolute left-0 right-0 z-10 mt-2 bg-white border rounded shadow max-h-60 overflow-auto">
+                    <div v-for="result in suggestions" :key="result.id" class="p-2 hover:bg-gray-100 cursor-pointer" @mousedown.prevent="openBookDialog(result)">
                         <div class="font-semibold">{{ result.accession_number }} - {{ result.title }}</div>
                         <div class="text-xs text-gray-500">{{ result.book?.authors }} | {{ result.book?.publication_year }}</div>
                     </div>
                 </div>
             </div>
         </div>
+        <WelcomeBookDialog v-if="showDialog" :record="selectedRecord" @close="showDialog = false" />
     </div>
 </template>

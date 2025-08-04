@@ -5,8 +5,7 @@ import { useForm } from '@inertiajs/vue3';
 const emit = defineEmits(['close']);
 
 const form = useForm({
-  first_name: '',
-  last_name: '',
+  name: '',
   email: '',
   password: '',
   password_confirmation: '',
@@ -38,14 +37,9 @@ const submit = () => {
       <h2 class="text-2xl font-bold text-usepmaroon mb-6 text-center">Register</h2>
       <form @submit.prevent="submit" class="space-y-4">
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">First Name</label>
-          <input v-model="form.first_name" type="text" required autocomplete="given-name" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-usepmaroon focus:border-usepmaroon" />
-          <div v-if="form.errors.first_name" class="text-red-500 text-xs mt-1">{{ form.errors.first_name }}</div>
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
-          <input v-model="form.last_name" type="text" required autocomplete="family-name" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-usepmaroon focus:border-usepmaroon" />
-          <div v-if="form.errors.last_name" class="text-red-500 text-xs mt-1">{{ form.errors.last_name }}</div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+          <input v-model="form.name" type="text" required autocomplete="name" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-usepmaroon focus:border-usepmaroon" />
+          <div v-if="form.errors.name" class="text-red-500 text-xs mt-1">{{ form.errors.name }}</div>
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
@@ -82,3 +76,4 @@ const submit = () => {
   animation: fadeIn 0.3s ease-out;
 }
 </style>
+
