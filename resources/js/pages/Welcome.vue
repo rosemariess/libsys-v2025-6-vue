@@ -5,6 +5,8 @@ import { AlertCircle, X } from 'lucide-vue-next'
 import { ref, onMounted } from 'vue'
 import WelcomeBookDialog from '@/components/WelcomeBookDialog.vue';
 import WelcomeSearch from '@/components/WelcomeSearch.vue';
+import LoginModal from '@/components/LoginModal.vue';
+import RegisterModal from '@/components/RegisterModal.vue';
 
 // for alert
 const page = usePage()
@@ -41,81 +43,187 @@ defineProps({
     search_button: Boolean,
 });
 
+const showLoginModal = ref(false);
+
+const openLoginModal = () => {
+    showLoginModal.value = true;
+};
+const closeLoginModal = () => {
+    showLoginModal.value = false;
+};
+
+const showRegisterModal = ref(false);
+
+const openRegisterModal = () => {
+    showRegisterModal.value = true;
+};
+const closeRegisterModal = () => {
+    showRegisterModal.value = false;
+};
+
 </script>
 
 <template>
-    <Head title="Welcome Raffy">
-    </Head>
-    <div class="flex min-h-screen flex-col items-center bg-[#FDFDFC] p-6 text-[#1b1b18] lg:justify-center lg:p-8 dark:bg-[#0a0a0a]">
-        <Alert class="absolute top-5 right-5 w-fit pr-8" variant="destructive" v-if="page.props.flash.error && showAlert">
-            <AlertCircle class="w-4 h-4" />
-            <button @click="showAlert = false" class="absolute top-2 right-2 p-1 hover:bg-red-100 rounded-full transition-colors">
-                <X class="w-4 h-4" />
+    <Head title="Welcome Raffy" />
+    <!-- Navigation -->
+    <nav class="bg-white shadow-md sticky top-0 z-50 w-full">
+        <div class="container mx-auto px-4 py-3 flex flex-col md:flex-row justify-between items-center gap-4">
+            <button class="text-2xl font-bold text-usepmaroon hover:text-usepmaroon/80 transition flex items-center">
+                <img src="/images/usep-logo-small.png" alt="USEP Logo" class="h-8 mr-2">
+                USeP Library
             </button>
-            <AlertTitle>Error</AlertTitle>
-            <AlertDescription>
-                {{ page.props.flash.error }}
-            </AlertDescription>
-        </Alert>
-        <header class="mb-6 w-full max-w-[335px] text-sm not-has-[nav]:hidden lg:max-w-4xl">
-            <nav class="flex items-center justify-end gap-4">
-                <Link
-                    v-if="$page.props.auth.user"
-                    :href="route('dashboard')"
-                    class="inline-block rounded-sm border border-[#19140035] px-5 py-1.5 text-sm leading-normal text-[#1b1b18] hover:border-[#1915014a] dark:border-[#3E3E3A] dark:text-[#EDEDEC] dark:hover:border-[#62605b]"
-                >
-                    Dashboard
-                </Link>
-                <template v-else>
-                    <Link
-                        v-if="$page.props.config.login_enabled"
-                        :href="route('login')"
-                        class="inline-block rounded-sm border border-transparent px-5 py-1.5 text-sm leading-normal text-[#1b1b18] hover:border-[#19140035] dark:text-[#EDEDEC] dark:hover:border-[#3E3E3A]"
-                    >
-                        Log in
-                    </Link>
-                    <Link
-                        v-if="$page.props.config.registration_enabled"
-                        :href="route('register')"
-                        class="inline-block rounded-sm border border-[#19140035] px-5 py-1.5 text-sm leading-normal text-[#1b1b18] hover:border-[#1915014a] dark:border-[#3E3E3A] dark:text-[#EDEDEC] dark:hover:border-[#62605b]"
-                    >
-                        Register
-                    </Link>
-                </template>
-            </nav>
-        </header>
-
-        <!-- The content itself -->
-        <div class="grid w-full opacity-100 transition-opacity duration-750 starting:opacity-0">
-
-            <div class="p-8 min-w-full flex flex-col items-center">
-                <WelcomeSearch :search_result="search_result" :search_term="search_term"
-                               :search_button="search_button"
-                />
+            <div class="flex items-center space-x-4">
+                <button v-if="$page.props.config.login_enabled" @click="openLoginModal" class="px-4 py-2 border border-usepmaroon text-usepmaroon rounded-md hover:bg-usepmaroon/10 transition flex items-center shadow-sm hover:shadow">
+                    <i class="fas fa-sign-in-alt mr-2"></i>
+                    <span class="hidden md:inline">Login</span>
+                </button>
+                <button v-if="$page.props.config.registration_enabled" @click="openRegisterModal" class="px-4 py-2 border border-usepgold text-usepgold rounded-md hover:bg-usepgold/10 transition flex items-center shadow-sm hover:shadow">
+                    <i class="fas fa-user-plus mr-2"></i>
+                    <span class="hidden md:inline">Register</span>
+                </button>
             </div>
+        </div>
+    </nav>
 
-            <div class="w-full" v-if="Object.keys(records?.data).length">
-                <div class="grid grid-cols-3 gap-4">
-                    <div v-for="record in records?.data" :key="record.id">
-                        <WelcomeBookDialog :record="record" />
+    <!-- Hero Section -->
+    <section class="relative h-[45vh] bg-cover bg-center flex flex-col items-center justify-center mb-8 hero-pattern"
+             style="background-image: url('/images/eagle.jpg');">
+        <div class="absolute inset-0 bg-black bg-opacity-50"></div>
+        <div class="relative z-10 text-center text-white">
+            <h1 class="text-3xl font-bold">USeP Campus Library</h1>
+            <p class="text-lg mt-2">Tagum-Mabini</p>
+        </div>
+        <!-- Search Bar -->
+        <div class="relative z-60 w-full px-4 mt-8 flex justify-center">
+            <div class="flex-1 max-w-3xl w-full relative flex justify-center">
+                <WelcomeSearch :search_result="search_result" :search_term="search_term" :search_button="search_button" />
+            </div>
+        </div>
+    </section>
+
+    <!-- Collection Cards Section -->
+    <section class="py-12 bg-gray-50 -mt-14">
+        <div class="container mx-auto">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-5 max-w-7xl mx-auto px-4 mt-5px">
+                <div class="collection-card group relative bg-gradient-to-br from-white to-gray-50 p-8 rounded-xl shadow-sm hover:shadow-lg border border-gray-100 overflow-hidden transition-all duration-300 hover:border-usepmaroon/20">
+                    <div class="absolute top-0 right-0 w-16 h-16 bg-usepmaroon/5 transform translate-x-8 -translate-y-8 rotate-45 transition-all duration-500 group-hover:bg-usepmaroon/10"></div>
+                    <div class="relative z-10">
+                        <div class="text-usepmaroon text-4xl mb-4 transition-all duration-300 group-hover:text-usepmaroon/90 group-hover:scale-110 inline-block">
+                            <i class="fas fa-book-open"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-2 text-gray-800 group-hover:text-usepmaroon transition-colors duration-300">Browse Collection</h3>
+                        <div class="text-3xl font-bold text-usepmaroon count-animation mb-1">25,689</div>
+                        <p class="text-gray-500 mt-2 text-sm font-medium">Items available</p>
+                        <div class="mt-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                            <span class="inline-block text-usepmaroon/80 text-sm font-medium">Click for details
+                                <i class="fas fa-arrow-right ml-1 transform group-hover:translate-x-1 transition-transform duration-300"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="collection-card group relative bg-gradient-to-br from-white to-gray-50 p-8 rounded-xl shadow-sm hover:shadow-lg border border-gray-100 overflow-hidden transition-all duration-300 hover:border-usepmaroon/20">
+                    <div class="absolute inset-0 overflow-hidden">
+                        <div class="absolute top-1/4 left-1/4 w-2 h-2 bg-yellow-400 rounded-full opacity-0 group-hover:opacity-70 group-hover:animate-ping duration-1000"></div>
+                        <div class="absolute top-1/3 right-1/4 w-1.5 h-1.5 bg-yellow-400 rounded-full opacity-0 group-hover:opacity-60 group-hover:animate-ping duration-700 delay-200"></div>
+                    </div>
+                    <div class="relative z-10">
+                        <div class="text-usepmaroon text-4xl mb-4 transition-all duration-300 group-hover:text-yellow-500 group-hover:scale-110 inline-block">
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-2 text-gray-800 group-hover:text-usepmaroon transition-colors duration-300">New Arrivals</h3>
+                        <div class="text-3xl font-bold text-usepmaroon count-animation mb-1">1,245</div>
+                        <p class="text-gray-500 mt-2 text-sm font-medium">New items this month</p>
+                        <div class="mt-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                            <span class="inline-block text-usepmaroon/80 text-sm font-medium">Click for details
+                                <i class="fas fa-arrow-right ml-1 transform group-hover:translate-x-1 transition-transform duration-300"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="collection-card group relative bg-gradient-to-br from-white to-gray-50 p-8 rounded-xl shadow-sm hover:shadow-lg border border-gray-100 overflow-hidden transition-all duration-300 hover:border-usepmaroon/20">
+                    <div class="absolute -bottom-4 -right-4 w-16 h-16 bg-usepmaroon/5 rounded-full transform transition-all duration-500 group-hover:scale-150 group-hover:bg-usepmaroon/10"></div>
+                    <div class="absolute -top-4 -left-4 w-12 h-12 bg-usepmaroon/5 rounded-full transform transition-all duration-500 group-hover:scale-150 group-hover:bg-usepmaroon/10"></div>
+                    <div class="relative z-10">
+                        <div class="text-usepmaroon text-4xl mb-4 transition-all duration-300 group-hover:text-green-500 group-hover:scale-110 inline-block">
+                            <i class="fas fa-thumbs-up"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-2 text-gray-800 group-hover:text-usepmaroon transition-colors duration-300">Top Picks</h3>
+                        <div class="text-3xl font-bold text-usepmaroon count-animation mb-1">892</div>
+                        <p class="text-gray-500 mt-2 text-sm font-medium">Highly recommended</p>
+                        <div class="mt-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                            <span class="inline-block text-usepmaroon/80 text-sm font-medium">Click for details
+                                <i class="fas fa-arrow-right ml-1 transform group-hover:translate-x-1 transition-transform duration-300"></i>
+                            </span>
+                        </div>
                     </div>
                 </div>
             </div>
-
-            <main class="flex w-full overflow-hidden rounded-lg">
-
-                <div class="border dark:border-[#3E3E3A] dark:text-[#EDEDEC] dark:hover:border-[#62605b]">
-                    <h1 class="text-8xl">FUNCTIONAL lang</h1>
-                    <h1 class="text-7xl">Saturday:</h1>
-                    <ul>
-                        <li class="pl-20 text-6xl">I display ang books</li>
-                        <li class="pl-20 text-6xl">Maka book, outside ug inside</li>
-                        <li class="pl-20 text-6xl">Display borrows</li>
-                        <li class="pl-20 text-6xl">Welcome search</li>
-                    </ul>
-                </div>
-            </main>
         </div>
-        <div class="hidden h-14.5 lg:block"></div>
-    </div>
+    </section>
+
+    <!-- Book Collection Section -->
+    <section class="py-16 bg-white">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center text-usepmaroon mb-12">Book Collection</h2>
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 px-4">
+                <div v-for="record in records?.data" :key="record.id">
+                    <WelcomeBookDialog :record="record" />
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-usepmaroon text-white py-8 w-full">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-4 md:mb-0">
+                    <h3 class="text-xl font-bold">USEP Library</h3>
+                    <p class="text-usepgold/80">Tagum-Mabini Campus</p>
+                </div>
+                <div class="flex space-x-4">
+                    <a href="#" class="text-white hover:text-usepgold transition">
+                        <i class="fab fa-facebook-f"></i>
+                    </a>
+                    <a href="#" class="text-white hover:text-usepgold transition">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                    <a href="#" class="text-white hover:text-usepgold transition">
+                        <i class="fab fa-instagram"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="border-t border-usepgold/20 mt-6 pt-6 text-sm text-center text-usepgold/80">
+                &copy; 2023 USEP Library. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <LoginModal v-if="showLoginModal" @close="closeLoginModal" />
+    <RegisterModal v-if="showRegisterModal" @close="closeRegisterModal" />
 </template>
+
+<style scoped>
+.hero-pattern {
+    background-image: radial-gradient(rgba(0, 0, 0, 0.1) 1px, transparent 1px);
+    background-size: 20px 20px;
+}
+.collection-card {
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+    z-index: 10;
+}
+.collection-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+    z-index: 20;
+}
+.count-animation {
+    animation: pulse 1s infinite;
+}
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+</style>
