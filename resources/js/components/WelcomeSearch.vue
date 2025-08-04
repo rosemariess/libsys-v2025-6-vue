@@ -93,7 +93,7 @@ onBeforeUnmount(() => {
                 <span class="absolute left-2 top-1/2 -translate-y-1/2 flex items-center justify-center">
                   <Search class="size-6 text-muted-foreground" />
                 </span>
-                <div v-if="searchFocused && suggestions.length" class="absolute left-0 right-0 z-10 mt-2 bg-white border rounded shadow max-h-60 overflow-auto">
+                <div v-if="(searchFocused || form.search.length > 0) && suggestions.length" class="absolute left-0 right-0 z-10 mt-2 bg-white border rounded shadow max-h-60 overflow-auto">
                     <div v-for="result in suggestions" :key="result.id" class="p-2 hover:bg-gray-100 cursor-pointer" @mousedown.prevent="openBookDialog(result)">
                         <div class="font-semibold">{{ result.accession_number }} - {{ result.title }}</div>
                         <div class="text-xs text-gray-500">{{ result.book?.authors }} | {{ result.book?.publication_year }}</div>

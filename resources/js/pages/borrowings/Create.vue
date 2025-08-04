@@ -5,8 +5,9 @@
     import { Input } from '@/components/ui/input';
     import { LoaderCircle, Search } from 'lucide-vue-next';
     import { Button } from '@/components/ui/button';
-    import { computed } from 'vue';
+    import { computed, ref } from 'vue';
     import BookScannerDialog from '@/components/BookScannerDialog.vue';
+    import { Dialog, DialogOverlay, DialogContent } from '@/components/ui/dialog';
 
     const breadcrumbs: BreadcrumbItem[] = [
       {
@@ -65,54 +66,121 @@
         borrowForm.post(route('borrowings.store'))
     }
 
+    const showScanModal = ref(false);
+    const scanType = ref('');
+
+    function openScanModal() {
+        showScanModal.value = true;
+        // Focus the input after a short delay to ensure modal is rendered
+        setTimeout(() => {
+            const input = document.getElementById('searchPatron') as HTMLInputElement;
+            if (input) input.focus();
+        }, 300);
+    }
+    function closeScanModal() {
+        showScanModal.value = false;
+        scanType.value = '';
+    }
+
+    // Listen for USB barcode/RFID input (simulate Enter key triggers input)
+    if (typeof window !== 'undefined') {
+        let buffer = '';
+        let lastInputTime = Date.now();
+        window.addEventListener('keydown', (e) => {
+            const now = Date.now();
+            // If time between keys is too long, reset buffer
+            if (now - lastInputTime > 100) buffer = '';
+            lastInputTime = now;
+            // Only allow numbers (and Enter)
+            if (/^[0-9]$/.test(e.key)) {
+                buffer += e.key;
+            } else if (e.key === 'Enter' && buffer.length > 3) {
+                // Fill the input and close modal if open
+                const input = document.getElementById('searchPatron') as HTMLInputElement;
+                if (input) {
+                    input.value = buffer;
+                    input.dispatchEvent(new Event('input'));
+                }
+                buffer = '';
+                showScanModal.value = false;
+            }
+        });
+    }
+
+    const showMissingIdModal = ref(false);
+
+    function handlePatronSubmit(e: Event) {
+        e.preventDefault();
+        if (!borrowForm.searchPatron) {
+            showMissingIdModal.value = true;
+            return;
+        }
+        searchAcc();
+    }
 </script>
 
 <template>
     <Head title="Borrow/Return Books" />
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="flex h-full flex-1 flex-col gap-6 overflow-x-auto rounded-xl p-6">
+        <div class="flex flex-col gap-4 p-4">
+            <!-- Back Button -->
+            <div class="mb-2">
+                <Button variant="outline" @click="$inertia.visit('/borrowings')" class="flex items-center gap-2">
+                    <i class="fas fa-arrow-left"></i> Back
+                </Button>
+            </div>
             <div class="grid grid-cols-1 gap-8 md:grid-cols-2">
                 <!-- Book Search and Result Section -->
                 <div class="flex flex-col gap-4 w-full">
-                    <!-- Book Result Placeholder -->
-                    <div class="search-result rounded-lg border p-4">
-                        <h3 class="text-lg font-semibold mb-2">Book Information</h3>
-                        <div class="space-y-2">
-                            <p>
-                                <strong>Accession Number:</strong>
-                                <span v-if="search_ac_result" class="text-muted-foreground">
-                                    {{ search_ac_result.accession_number }}
-                                </span>
-                                <span v-else class="text-muted-foreground">
-                                    Enter accession number below
-                                </span>
-                            </p>
-                            <p>
-                                <strong>Title:</strong>
-                                <span v-if="search_ac_result" class="text-muted-foreground">
-                                    {{ search_ac_result.title || 'N/A' }}
-                                </span>
-                                <span v-else class="text-muted-foreground">
-                                    Book title will appear here
-                                </span>
-                            </p>
-                            <p>
-                                <strong>Status:</strong>
-                                <span v-if="search_ac_result" class="text-muted-foreground">
-                                    {{ search_ac_result.status || 'N/A' }}
-                                </span>
-                                <span v-else class="text-muted-foreground">
-                                    Availability status will appear here
-                                </span>
-                            </p>
+                    <!-- Book Result Card with Cover -->
+                    <div class="search-result rounded-lg border p-4 flex flex-col md:flex-row gap-4 items-center bg-white shadow-sm">
+                        <div class="w-28 h-40 bg-gray-100 flex items-center justify-center rounded overflow-hidden border flex-shrink-0">
+                            <img v-if="search_ac_result && search_ac_result.cover_url" :src="search_ac_result.cover_url" alt="Book Cover" class="object-cover w-full h-full" />
+                            <span v-else class="text-gray-400 text-xs">No Cover</span>
                         </div>
-                        <Button v-if="search_ac_result"
-                            @click="borrow('inside')"
-                            :disabled="borrowForm.processing"
-                            class="flex-1"
-                        >
-                            Borrow (Inside)
-                        </Button>
+                        <div class="flex-1 w-full md:w-auto space-y-2 md:pr-4">
+                            <h3 class="text-lg font-semibold mb-2 text-usepmaroon flex items-center gap-2">
+                                <i class="fas fa-book"></i> Book Information
+                            </h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1">
+                                <p>
+                                    <strong>Accession Number:</strong>
+                                    <span v-if="search_ac_result" class="text-muted-foreground">
+                                        {{ search_ac_result.accession_number }}
+                                    </span>
+                                    <span v-else class="text-muted-foreground">
+                                        Enter accession number below
+                                    </span>
+                                </p>
+                                <p>
+                                    <strong>Title:</strong>
+                                    <span v-if="search_ac_result" class="text-muted-foreground">
+                                        {{ search_ac_result.title || 'N/A' }}
+                                    </span>
+                                    <span v-else class="text-muted-foreground">
+                                        Book title will appear here
+                                    </span>
+                                </p>
+                                <p>
+                                    <strong>Status:</strong>
+                                    <span v-if="search_ac_result" :class="{'text-green-600': search_ac_result.status === 'available', 'text-red-600': search_ac_result.status !== 'available'}">
+                                        {{ search_ac_result.status || 'N/A' }}
+                                    </span>
+                                    <span v-else class="text-muted-foreground">
+                                        Availability status will appear here
+                                    </span>
+                                </p>
+                            </div>
+                        </div>
+                        <div class="flex flex-col items-end justify-end h-full w-full md:w-auto md:pl-4">
+                            <Button v-if="search_ac_result"
+                                @click="borrow('inside')"
+                                :disabled="borrowForm.processing"
+                                class="w-full md:w-36 mt-4 md:mt-0 bg-usepmaroon text-white hover:bg-usepmaroon/90 shadow-md"
+                            >
+                                <i class="fas fa-sign-in-alt mr-2"></i> Borrow (Inside)
+                            </Button>
+                        </div>
                     </div>
                     <!-- Search Form -->
                     <BookScannerDialog />
@@ -155,30 +223,43 @@
 
                 <!-- Patron Search and Result Section -->
                 <div class="flex flex-col gap-4">
-                    <!-- Patron Result Placeholder -->
-                    <div class="search-result rounded-lg border p-4">
-                        <h3 class="text-lg font-semibold mb-2">Patron Information</h3>
-                        <div class="space-y-2">
-                            <p><strong>Library ID:</strong> <span class="text-muted-foreground">Enter library ID below</span></p>
-                            <p><strong>Name:</strong> <span class="text-muted-foreground">Patron name will appear here</span></p>
-                            <p><strong>Status:</strong> <span class="text-muted-foreground">Patron status will appear here</span></p>
+                    <!-- Patron Result Card with Avatar -->
+                    <div class="search-result rounded-lg border p-4 flex flex-col md:flex-row gap-4 items-center bg-white shadow-sm">
+                        <div class="w-20 h-20 bg-gray-100 flex items-center justify-center rounded-full overflow-hidden border flex-shrink-0">
+                            <img v-if="borrowForm.patron_avatar_url" :src="borrowForm.patron_avatar_url" alt="Patron Avatar" class="object-cover w-full h-full" />
+                            <span v-else class="text-gray-400 text-xs"><i class="fas fa-user fa-2x"></i></span>
+                        </div>
+                        <div class="flex-1 w-full md:w-auto space-y-2 md:pr-4">
+                            <h3 class="text-lg font-semibold mb-2 text-usepmaroon flex items-center gap-2">
+                                <i class="fas fa-user"></i> Patron Information
+                            </h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1">
+                                <p><strong>Library ID:</strong> <span class="text-muted-foreground">Enter library ID below</span></p>
+                                <p><strong>Name:</strong> <span class="text-muted-foreground">Patron name will appear here</span></p>
+                                <p><strong>Status:</strong> <span class="text-muted-foreground">Patron status will appear here</span></p>
+                            </div>
                         </div>
                     </div>
                     <!-- Patron Search Form (shown only when book is available) -->
                     <div v-if="search_ac_result && search_ac_result.status === 'available'" class="flex flex-col gap-4">
-                        <form @submit.prevent="searchAcc" class="flex flex-col gap-3">
-                            <div class="relative">
+                        <form @submit="handlePatronSubmit" class="flex flex-col gap-3">
+                            <div class="relative flex items-center gap-2">
                                 <Input
                                     required
                                     id="searchPatron"
                                     type="number"
                                     placeholder="Search Library ID..."
-                                    class="pl-10"
+                                    class="pl-10 flex-1"
                                     v-model="borrowForm.searchPatron"
                                 />
                                 <span class="absolute left-0 inset-y-0 flex items-center justify-center px-2">
                                     <Search class="size-6 text-muted-foreground" />
                                 </span>
+                                <Button type="button" variant="ghost" class="ml-2" title="Scan Barcode or RFID" @click="openScanModal()">
+                                    <i class="fas fa-barcode text-lg"></i>
+                                    <i class="fas fa-id-card text-lg ml-1"></i>
+                                    <span class="ml-2 text-xs hidden md:inline">Scan</span>
+                                </Button>
                             </div>
                             <div class="flex gap-3">
                                 <Button
@@ -205,14 +286,41 @@
                         <Button
                             @click="borrow('take-home')"
                             :disabled="borrowForm.processing"
-                            class="flex-1"
+                            class="w-full mt-2"
                         >
                             Borrow (Take Home)
                         </Button>
                     </div>
-
                 </div>
             </div>
         </div>
     </AppLayout>
+    <Dialog v-model:open="showScanModal">
+        <DialogOverlay />
+        <DialogContent class="max-w-sm mx-auto text-center">
+            <div class="py-6">
+                <div class="flex flex-col items-center mb-2">
+                    <i class="fas fa-barcode text-5xl text-gray-700 mb-2"></i>
+                    <i class="fas fa-id-card text-5xl text-gray-700 mb-2"></i>
+                    <span class="text-xs text-gray-500">Barcode or RFID Scanner</span>
+                </div>
+                <h2 class="text-xl font-bold mb-2">Scan Barcode or RFID</h2>
+                <p class="text-gray-600 mb-4">You can scan now. Please present the barcode or RFID card to the scanner. The input will be automatically filled.</p>
+                <Button @click="closeScanModal" class="mt-2 w-full">Close</Button>
+            </div>
+        </DialogContent>
+    </Dialog>
+    <Dialog v-model:open="showMissingIdModal">
+        <DialogOverlay />
+        <DialogContent class="max-w-sm mx-auto text-center">
+            <div class="py-6">
+                <div class="flex flex-col items-center mb-2">
+                    <i class="fas fa-id-card text-5xl text-gray-700 mb-2"></i>
+                </div>
+                <h2 class="text-xl font-bold mb-2">Please scan or enter student ID</h2>
+                <p class="text-gray-600 mb-4">A student ID is required to proceed. Please scan the barcode/RFID or enter the ID manually.</p>
+                <Button @click="showMissingIdModal = false" class="mt-2 w-full">Close</Button>
+            </div>
+        </DialogContent>
+    </Dialog>
 </template>
